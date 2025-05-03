@@ -1,4 +1,4 @@
-#include "ndtf.h"
+#include <ndtf/ndtf.h>
 #include <string.h>
 
 NDTF_Channels ndtf_getChannelCount(NDTF_TexelFormat texelFormat)
@@ -811,7 +811,7 @@ void* ndtf_file_getTexel(NDTF_File* file, NDTF_Coord* coordPtr)
 
 	if (ind >= tDataSize) return NULL;
 
-	return (void*)file->data[ind];
+	return (void*)&file->data[ind];
 }
 void* ndtf_file_getTexel_2D(NDTF_File* file, uint16_t x, uint16_t y)
 {
