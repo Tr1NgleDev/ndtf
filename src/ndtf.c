@@ -934,8 +934,7 @@ bool ndtf_file_save(NDTF_File* file, const char* filename)
 {
 	if (!ndtf_file_isValid(file)) return false;
 
-	FILE* handle = NULL;
-	fopen_s(&handle, filename, "wb");
+	FILE* handle = fopen(filename, "wb");
 
 	if (handle != NULL)
 	{
