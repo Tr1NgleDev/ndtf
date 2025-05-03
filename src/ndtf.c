@@ -1,5 +1,6 @@
 #include <ndtf/ndtf.h>
 #include <string.h>
+#include <zlib.h>
 
 NDTF_Channels ndtf_getChannelCount(NDTF_TexelFormat texelFormat)
 {
@@ -117,27 +118,41 @@ NDTF_File ndtf_file_loadFromData(uint8_t* data, size_t size, NDTF_TexelFormat* f
 		return result;
 	}
 
-	size_t totalTexels = 1;
-	for (int i = 0; i < result.header.dimensions; i++)
-		totalTexels *= result.header.size[i];
+	size_t dataSize = ndtf_file_getDataSize(&result);
 
-	size_t bpp = ndtf_getTexelSize((NDTF_TexelFormat)result.header.texelFormat);
-	size_t tDataSize = totalTexels * bpp;
-
-	if (size != sizeof(NDTF_Header) + tDataSize)
+	if (ndtf_file_getZLibCompression(&result))
 	{
-		memset(&result, 0, sizeof(NDTF_File));
-		return result;
+		size_t actualDataSize = 0;
+		result.data = ndtf_zLibDecompressData(data + sizeof(NDTF_Header), size - sizeof(NDTF_Header), &actualDataSize);
+		if (!result.data)
+		{
+			memset(&result, 0, sizeof(NDTF_File));
+			return result;
+		}
+		if (actualDataSize != dataSize)
+		{
+			free(result.data);
+			memset(&result, 0, sizeof(NDTF_File));
+			return result;
+		}
 	}
-
-	result.data = (uint8_t*)malloc(tDataSize);
-	if (!result.data)
+	else
 	{
-		memset(&result, 0, sizeof(NDTF_File));
-		return result;
-	}
+		if (size != sizeof(NDTF_Header) + dataSize)
+		{
+			memset(&result, 0, sizeof(NDTF_File));
+			return result;
+		}
 
-	memcpy(result.data, data + sizeof(NDTF_Header), tDataSize);
+		result.data = (uint8_t*)malloc(dataSize);
+		if (!result.data)
+		{
+			memset(&result, 0, sizeof(NDTF_File));
+			return result;
+		}
+
+		memcpy(result.data, data + sizeof(NDTF_Header), dataSize);
+	}
 
 	if (format) *format = (NDTF_TexelFormat)result.header.texelFormat;
 	ndtf_file_reformat(&result, desiredFormat);
@@ -660,11 +675,11 @@ NDTF_File ndtf_file_create(NDTF_Dimensions dimensions, NDTF_TexelFormat texelFor
 	result.header.version = NDTF_VERSION;
 	result.header.dimensions = dimensions;
 	result.header.texelFormat = texelFormat;
-	result.header.width = width;
-	result.header.height = height;
-	result.header.depth = depth;
-	result.header.ind = ind;
-	result.header.ind2 = ind2;
+	result.header.width = __max(width, 1);
+	result.header.height = __max(height, 1);
+	result.header.depth = __max(depth, 1);
+	result.header.ind = __max(ind, 1);
+	result.header.ind2 = __max(ind2, 1);
 
 	size_t totalTexels = 1;
 	for (int i = 0; i < dimensions; i++)
@@ -693,14 +708,14 @@ NDTF_File ndtf_file_create_5D(NDTF_TexelFormat texelFormat, uint16_t width, uint
 {
 	return ndtf_file_create(NDTF_DIMENSIONS_FIVE, texelFormat, width, height, depth, ind, ind2);
 }
-uint64_t ndtf_file_getTexelIndex(NDTF_File* file, NDTF_Coord* coordPtr)
+size_t ndtf_file_getTexelIndex(NDTF_File* file, NDTF_Coord* coordPtr)
 {
 	NDTF_Channels channels = ndtf_getChannelCount((NDTF_TexelFormat)file->header.texelFormat);
 
-	uint64_t ind = 0;
+	size_t ind = 0;
 	for (int i = 0; i < file->header.dimensions; i++)
 	{
-		uint64_t sp = 1;
+		size_t sp = 1;
 		for (int j = (uint8_t)NDTF_DIMENSIONS_TWO - 1; j <= i; j++)
 		{
 			if (j >= 1)
@@ -709,7 +724,7 @@ uint64_t ndtf_file_getTexelIndex(NDTF_File* file, NDTF_Coord* coordPtr)
 		ind += coordPtr->coord[i] * __max(sp, 1);
 	}
 
-	ind *= (uint64_t)channels;
+	ind *= (size_t)channels;
 
 	return ind;
 }
@@ -719,15 +734,11 @@ bool ndtf_file_setTexel(NDTF_File* file, NDTF_Coord* coordPtr, void* colorPtr)
 	size_t channelSize = ndtf_getChannelSize((NDTF_TexelFormat)file->header.texelFormat);
 	bool cIsFloat = ndtf_getChannelIsFloat((NDTF_TexelFormat)file->header.texelFormat);
 
-	uint64_t ind = ndtf_file_getTexelIndex(file, coordPtr);
+	size_t ind = ndtf_file_getTexelIndex(file, coordPtr);
 
-	size_t totalTexels = 1;
-	for (int i = 0; i < file->header.dimensions; i++)
-		totalTexels *= file->header.size[i];
-	size_t bpp = ndtf_getTexelSize((NDTF_TexelFormat)file->header.texelFormat);
-	size_t tDataSize = totalTexels * bpp;
+	size_t dataSize = ndtf_file_getDataSize(file);
 
-	if (ind >= tDataSize) return false;
+	if (ind >= dataSize) return false;
 
 	switch (channelSize)
 	{
@@ -801,7 +812,7 @@ bool ndtf_file_setTexel_5D(NDTF_File* file, uint16_t x, uint16_t y, uint16_t z, 
 
 void* ndtf_file_getTexel(NDTF_File* file, NDTF_Coord* coordPtr)
 {
-	uint64_t ind = ndtf_file_getTexelIndex(file, coordPtr);
+	size_t ind = ndtf_file_getTexelIndex(file, coordPtr);
 
 	size_t totalTexels = 1;
 	for (int i = 0; i < file->header.dimensions; i++)
@@ -853,26 +864,31 @@ void* ndtf_file_getTexel_5D(NDTF_File* file, uint16_t x, uint16_t y, uint16_t z,
 	coord.v = v;
 	return ndtf_file_getTexel(file, &coord);
 }
-void* ndtf_file_saveToData(NDTF_File* file, uint64_t* size)
+void* ndtf_file_saveToData(NDTF_File* file, size_t* size)
 {
 	if (!ndtf_file_isValid(file)) return NULL;
 
-	uint64_t fileSize = sizeof(NDTF_Header);
+	size_t fileSize = sizeof(NDTF_Header);
 
-	size_t totalTexels = 1;
-	for (int i = 0; i < file->header.dimensions; i++)
-		totalTexels *= file->header.size[i];
-	size_t bpp = ndtf_getTexelSize((NDTF_TexelFormat)file->header.texelFormat);
-	size_t tDataSize = totalTexels * bpp;
+	size_t dataSize = ndtf_file_getDataSize(file);
 
-	fileSize += tDataSize;
+	fileSize += dataSize;
 
 	uint8_t* data = (uint8_t*)malloc(fileSize);
 
 	if (!data) return NULL;
 
 	memcpy(data, &file->header, sizeof(NDTF_Header));
-	memcpy(data + sizeof(NDTF_Header), file->data, tDataSize);
+
+	void* fileData = file->data;
+	if (ndtf_file_getZLibCompression(file))
+		fileData = ndtf_zLibCompressData(fileData, dataSize, &dataSize);
+	if (!fileData) return NULL;
+
+	memcpy(data + sizeof(NDTF_Header), fileData, dataSize);
+
+	if (ndtf_file_getZLibCompression(file))
+		free(fileData);
 
 	if (size)
 		*size = fileSize;
@@ -885,31 +901,24 @@ bool ndtf_file_saveToFile(NDTF_File* file, FILE* handle)
 
 	if (!handle) return false;
 
-	/*
-	uint64_t size;
+	size_t bytesWritten;
 
-	void* data = ndtf_file_saveToData(file, &size);
-
-	if (!data) return false;
-
-	uint64_t bytesWritten = fwrite(data, sizeof(uint8_t), size, handle);
-	free(data);
-
-	if (bytesWritten < size) return false;
-	*/
-
-	uint64_t bytesWritten;
 	bytesWritten = fwrite(&file->header, sizeof(uint8_t), sizeof(NDTF_Header), handle);
 	if (bytesWritten < sizeof(NDTF_Header)) return false;
 
-	size_t totalTexels = 1;
-	for (int i = 0; i < file->header.dimensions; i++)
-		totalTexels *= file->header.size[i];
-	size_t bpp = ndtf_getTexelSize((NDTF_TexelFormat)file->header.texelFormat);
-	size_t tDataSize = totalTexels * bpp;
+	size_t dataSize = ndtf_file_getDataSize(file);
 
-	bytesWritten = fwrite(file->data, sizeof(uint8_t), tDataSize, handle);
-	if (bytesWritten < tDataSize) return false;
+	void* fileData = file->data;
+	if (ndtf_file_getZLibCompression(file))
+		fileData = ndtf_zLibCompressData(fileData, dataSize, &dataSize);
+	if (!fileData) return false;
+
+	bytesWritten = fwrite(fileData, sizeof(uint8_t), dataSize, handle);
+	
+	if (ndtf_file_getZLibCompression(file))
+		free(fileData);
+
+	if (bytesWritten < dataSize) return false;
 
 	return true;
 }
@@ -932,6 +941,87 @@ bool ndtf_file_save(NDTF_File* file, const char* filename)
 	}
 
 	return false;
+}
+
+
+bool ndtf_file_getZLibCompression(NDTF_File* file)
+{
+	return file->header.flags.zlib_compression;
+}
+
+void ndtf_file_setZLibCompression(NDTF_File* file, bool zlib_compression)
+{
+	file->header.flags.zlib_compression = zlib_compression;
+}
+
+void* ndtf_zLibCompressData(const void* data, size_t size, size_t* newSize)
+{
+	uint64_t compSize = compressBound(size);
+
+	uint8_t* compData = (uint8_t*)malloc(compSize + sizeof(uint64_t));
+	if (!compData) return NULL;
+
+	int result = compress(compData + sizeof(uint64_t), &compSize, data, size);
+	if (result != Z_OK)
+	{
+		free(compData);
+		return NULL;
+	}
+
+	memcpy((void*)compData, (void*)&size, sizeof(uint64_t)); // store the uncompressed size
+
+	if (newSize)
+		*newSize = compSize + sizeof(uint64_t);
+
+	return compData;
+}
+
+void* ndtf_zLibDecompressData(const void* data, size_t size, size_t* newSize)
+{
+	if (size < sizeof(uint64_t)) return NULL;
+
+	uint64_t uncompSize = *(uint64_t*)data;
+
+	uint8_t* uncompData = (uint8_t*)malloc(uncompSize);
+	if (!uncompData) return NULL;
+
+	const void* compData = (uint8_t*)data + sizeof(uint64_t);
+	uint64_t compSize = size - sizeof(uint64_t);
+
+	int result = uncompress(uncompData, &uncompSize, compData, compSize);
+	if (result != Z_OK)
+	{
+		free(uncompData);
+		return NULL;
+	}
+
+	if (newSize)
+		*newSize = uncompSize;
+
+	return uncompData;
+}
+
+
+size_t ndtf_file_getDataSize(NDTF_File* file)
+{
+	size_t totalTexels = 1;
+	for (int i = 0; i < file->header.dimensions; i++)
+		totalTexels *= file->header.size[i];
+	size_t bpp = ndtf_getTexelSize((NDTF_TexelFormat)file->header.texelFormat);
+	return totalTexels * bpp;
+}
+
+void ndtf_file_free(NDTF_File* file)
+{
+	if (ndtf_file_isValid(file))
+	{
+		free(file->data);
+		file->header.width = 0;
+		file->header.height = 0;
+		file->header.depth = 0;
+		file->header.ind = 0;
+		file->header.ind2 = 0;
+	}
 }
 
 typedef uint32_t GLenum;

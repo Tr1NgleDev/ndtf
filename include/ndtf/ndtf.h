@@ -105,24 +105,31 @@ extern "C" {
 	size_t ndtf_getChannelSize(NDTF_TexelFormat texelFormat);
 	size_t ndtf_getTexelSize(NDTF_TexelFormat texelFormat);
 	bool ndtf_getChannelIsFloat(NDTF_TexelFormat texelFormat);
+	
 	NDTF_File ndtf_file_loadFromData(uint8_t* data, size_t size, NDTF_TexelFormat* format, NDTF_TexelFormat desiredFormat);
 	NDTF_File ndtf_file_loadFromFile(FILE* file, NDTF_TexelFormat* format, NDTF_TexelFormat desiredFormat);
 	NDTF_File ndtf_file_load(const char* filename, NDTF_TexelFormat* format, NDTF_TexelFormat desiredFormat);
+	
 	void* ndtf_loadFromData(uint8_t* data, size_t size, uint16_t* width, uint16_t* height, uint16_t* depth, uint16_t* ind, uint16_t* ind2, NDTF_TexelFormat* format, NDTF_TexelFormat desiredFormat);
 	void* ndtf_loadFromFile(FILE* file, uint16_t* width, uint16_t* height, uint16_t* depth, uint16_t* ind, uint16_t* ind2, NDTF_TexelFormat* format, NDTF_TexelFormat desiredFormat);
 	void* ndtf_load(const char* filename, uint16_t* width, uint16_t* height, uint16_t* depth, uint16_t* ind, uint16_t* ind2, NDTF_TexelFormat* format, NDTF_TexelFormat desiredFormat);
+	
 	uint8_t* ndtf_loadFromData_u8(uint8_t* data, size_t size, uint16_t* width, uint16_t* height, uint16_t* depth, uint16_t* ind, uint16_t* ind2, NDTF_TexelFormat* format, NDTF_TexelFormat desiredFormat);
 	uint8_t* ndtf_loadFromFile_u8(FILE* file, uint16_t* width, uint16_t* height, uint16_t* depth, uint16_t* ind, uint16_t* ind2, NDTF_TexelFormat* format, NDTF_TexelFormat desiredFormat);
 	uint8_t* ndtf_load_u8(const char* filename, uint16_t* width, uint16_t* height, uint16_t* depth, uint16_t* ind, uint16_t* ind2, NDTF_TexelFormat* format, NDTF_TexelFormat desiredFormat);
+	
 	uint16_t* ndtf_loadFromData_u16(uint8_t* data, size_t size, uint16_t* width, uint16_t* height, uint16_t* depth, uint16_t* ind, uint16_t* ind2, NDTF_TexelFormat* format, NDTF_TexelFormat desiredFormat);
 	uint16_t* ndtf_loadFromFile_u16(FILE* file, uint16_t* width, uint16_t* height, uint16_t* depth, uint16_t* ind, uint16_t* ind2, NDTF_TexelFormat* format, NDTF_TexelFormat desiredFormat);
 	uint16_t* ndtf_load_u16(const char* filename, uint16_t* width, uint16_t* height, uint16_t* depth, uint16_t* ind, uint16_t* ind2, NDTF_TexelFormat* format, NDTF_TexelFormat desiredFormat);
+	
 	uint32_t* ndtf_loadFromData_u32(uint8_t* data, size_t size, uint16_t* width, uint16_t* height, uint16_t* depth, uint16_t* ind, uint16_t* ind2, NDTF_TexelFormat* format, NDTF_TexelFormat desiredFormat);
 	uint32_t* ndtf_loadFromFile_u32(FILE* file, uint16_t* width, uint16_t* height, uint16_t* depth, uint16_t* ind, uint16_t* ind2, NDTF_TexelFormat* format, NDTF_TexelFormat desiredFormat);
 	uint32_t* ndtf_load_u32(const char* filename, uint16_t* width, uint16_t* height, uint16_t* depth, uint16_t* ind, uint16_t* ind2, NDTF_TexelFormat* format, NDTF_TexelFormat desiredFormat);
+	
 	float* ndtf_loadFromData_f(uint8_t* data, size_t size, uint16_t* width, uint16_t* height, uint16_t* depth, uint16_t* ind, uint16_t* ind2, NDTF_TexelFormat* format, NDTF_TexelFormat desiredFormat);
 	float* ndtf_loadFromFile_f(FILE* file, uint16_t* width, uint16_t* height, uint16_t* depth, uint16_t* ind, uint16_t* ind2, NDTF_TexelFormat* format, NDTF_TexelFormat desiredFormat);
 	float* ndtf_load_f(const char* filename, uint16_t* width, uint16_t* height, uint16_t* depth, uint16_t* ind, uint16_t* ind2, NDTF_TexelFormat* format, NDTF_TexelFormat desiredFormat);
+	
 	bool ndtf_file_isValid(NDTF_File* file);
 	void ndtf_file_reformat(NDTF_File* file, NDTF_TexelFormat desiredFormat);
 	NDTF_File ndtf_file_create(NDTF_Dimensions dimensions, NDTF_TexelFormat texelFormat, uint16_t width, uint16_t height, uint16_t depth, uint16_t ind, uint16_t ind2);
@@ -130,7 +137,7 @@ extern "C" {
 	NDTF_File ndtf_file_create_3D(NDTF_TexelFormat texelFormat, uint16_t width, uint16_t height, uint16_t depth);
 	NDTF_File ndtf_file_create_4D(NDTF_TexelFormat texelFormat, uint16_t width, uint16_t height, uint16_t depth, uint16_t ind);
 	NDTF_File ndtf_file_create_5D(NDTF_TexelFormat texelFormat, uint16_t width, uint16_t height, uint16_t depth, uint16_t ind, uint16_t ind2);
-	uint64_t ndtf_file_getTexelIndex(NDTF_File* file, NDTF_Coord* coordPtr);
+	size_t ndtf_file_getTexelIndex(NDTF_File* file, NDTF_Coord* coordPtr);
 	bool ndtf_file_setTexel(NDTF_File* file, NDTF_Coord* coordPtr, void* colorPtr);
 	bool ndtf_file_setTexel_2D(NDTF_File* file, uint16_t x, uint16_t y, void* colorPtr);
 	bool ndtf_file_setTexel_3D(NDTF_File* file, uint16_t x, uint16_t y, uint16_t z, void* colorPtr);
@@ -141,9 +148,19 @@ extern "C" {
 	void* ndtf_file_getTexel_3D(NDTF_File* file, uint16_t x, uint16_t y, uint16_t z);
 	void* ndtf_file_getTexel_4D(NDTF_File* file, uint16_t x, uint16_t y, uint16_t z, uint16_t w);
 	void* ndtf_file_getTexel_5D(NDTF_File* file, uint16_t x, uint16_t y, uint16_t z, uint16_t w, uint16_t v);
-	void* ndtf_file_saveToData(NDTF_File* file, uint64_t* size);
+	void* ndtf_file_saveToData(NDTF_File* file, size_t* size);
 	bool ndtf_file_saveToFile(NDTF_File* file, FILE* handle);
 	bool ndtf_file_save(NDTF_File* file, const char* filename);
+
+	bool ndtf_file_getZLibCompression(NDTF_File* file);
+	void ndtf_file_setZLibCompression(NDTF_File* file, bool zlib_compression);
+
+	void* ndtf_zLibCompressData(const void* data, size_t size, size_t* newSize);
+	void* ndtf_zLibDecompressData(const void* data, size_t size, size_t* newSize);
+
+	size_t ndtf_file_getDataSize(NDTF_File* file);
+
+	void ndtf_file_free(NDTF_File* file);
 
 	// GL helpers
 #ifdef NDTF_GL_HELPER_FUNCTIONS
