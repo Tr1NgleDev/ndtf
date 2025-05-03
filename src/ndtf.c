@@ -222,15 +222,15 @@ void* ndtf_loadFromData(uint8_t* data, size_t size, uint16_t* width, uint16_t* h
 	if (!ndtf_file_isValid(&f)) return NULL;
 
 	if (width)
-		*width = __max(f.header.width, 1);
+		*width = max(f.header.width, 1);
 	if (height)
-		*height = __max(f.header.height, 1);
+		*height = max(f.header.height, 1);
 	if (depth)
-		*depth = __max(f.header.depth, 1);
+		*depth = max(f.header.depth, 1);
 	if (ind)
-		*ind = __max(f.header.ind, 1);
+		*ind = max(f.header.ind, 1);
 	if (ind2)
-		*ind2 = __max(f.header.ind2, 1);
+		*ind2 = max(f.header.ind2, 1);
 
 	return f.data8b;
 }
@@ -240,15 +240,15 @@ void* ndtf_loadFromFile(FILE* file, uint16_t* width, uint16_t* height, uint16_t*
 	if (!ndtf_file_isValid(&f)) return NULL;
 
 	if (width)
-		*width = __max(f.header.width, 1);
+		*width = max(f.header.width, 1);
 	if (height)
-		*height = __max(f.header.height, 1);
+		*height = max(f.header.height, 1);
 	if (depth)
-		*depth = __max(f.header.depth, 1);
+		*depth = max(f.header.depth, 1);
 	if (ind)
-		*ind = __max(f.header.ind, 1);
+		*ind = max(f.header.ind, 1);
 	if (ind2)
-		*ind2 = __max(f.header.ind2, 1);
+		*ind2 = max(f.header.ind2, 1);
 
 	return f.data8b;
 }
@@ -258,15 +258,15 @@ void* ndtf_load(const char* filename, uint16_t* width, uint16_t* height, uint16_
 	if (!ndtf_file_isValid(&f)) return NULL;
 
 	if (width)
-		*width = __max(f.header.width, 1);
+		*width = max(f.header.width, 1);
 	if (height)
-		*height = __max(f.header.height, 1);
+		*height = max(f.header.height, 1);
 	if (depth)
-		*depth = __max(f.header.depth, 1);
+		*depth = max(f.header.depth, 1);
 	if (ind)
-		*ind = __max(f.header.ind, 1);
+		*ind = max(f.header.ind, 1);
 	if (ind2)
-		*ind2 = __max(f.header.ind2, 1);
+		*ind2 = max(f.header.ind2, 1);
 
 	return f.data8b;
 }
@@ -675,11 +675,11 @@ NDTF_File ndtf_file_create(NDTF_Dimensions dimensions, NDTF_TexelFormat texelFor
 	result.header.version = NDTF_VERSION;
 	result.header.dimensions = dimensions;
 	result.header.texelFormat = texelFormat;
-	result.header.width = __max(width, 1);
-	result.header.height = __max(height, 1);
-	result.header.depth = __max(depth, 1);
-	result.header.ind = __max(ind, 1);
-	result.header.ind2 = __max(ind2, 1);
+	result.header.width = max(width, 1);
+	result.header.height = max(height, 1);
+	result.header.depth = max(depth, 1);
+	result.header.ind = max(ind, 1);
+	result.header.ind2 = max(ind2, 1);
 
 	size_t totalTexels = 1;
 	for (int i = 0; i < dimensions; i++)
@@ -721,7 +721,7 @@ size_t ndtf_file_getTexelIndex(NDTF_File* file, NDTF_Coord* coordPtr)
 			if (j >= 1)
 				sp *= file->header.size[j - 1];
 		}
-		ind += coordPtr->coord[i] * __max(sp, 1);
+		ind += coordPtr->coord[i] * max(sp, 1);
 	}
 
 	ind *= (size_t)channels;

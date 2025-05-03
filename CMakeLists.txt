@@ -11,6 +11,7 @@ set(NDTF_VERSION ${NDTF_VERSION_MAJOR}.${NDTF_VERSION_MINOR})
 project(ndtf VERSION ${NDTF_VERSION} LANGUAGES C)
 
 set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
 
 add_subdirectory("thirdparty/zlib")
 
@@ -24,3 +25,5 @@ target_include_directories(ndtf
 )
 
 target_link_libraries(ndtf PRIVATE zlib)
+
+target_compile_options(ndtf PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-Wno-error=implicit-function-declaration>)
