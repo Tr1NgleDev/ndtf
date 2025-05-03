@@ -12,8 +12,8 @@
 #define NDTF_VERSION_MAJOR 1
 #define NDTF_VERSION_MINOR 0
 #define NDTF_VERSION NDTF_CREATE_VERSION(NDTF_VERSION_MAJOR, NDTF_VERSION_MINOR)
-#define NDTF_EXTRACT_VERSION_MAJOR(version) ( version & 0xFF00 )
-#define NDTF_EXTRACT_VERSION_MINOR(version) ( version & 0x00FF )
+#define NDTF_EXTRACT_VERSION_MAJOR(version) ( (version & 0xFF00) >> 8 )
+#define NDTF_EXTRACT_VERSION_MINOR(version) ( (version & 0x00FF) >> 0 )
 
 typedef enum NDTF_Dimensions
 {
