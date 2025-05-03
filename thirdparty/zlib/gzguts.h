@@ -212,3 +212,7 @@ char ZLIB_INTERNAL *gz_strwinerror(DWORD error);
    (possible z_off64_t types off_t, off64_t, and long are all signed) */
 unsigned ZLIB_INTERNAL gz_intmax(void);
 #define GT_OFF(x) (sizeof(int) == sizeof(z_off64_t) && (x) > gz_intmax())
+
+#ifndef _WIN32
+#include <unistd.h> // lseek()
+#endif
