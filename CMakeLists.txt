@@ -1,9 +1,18 @@
-cmake_minimum_required(VERSION 3.10)
-project(ndtf C)
+cmake_minimum_required(VERSION 3.6)
+
+file(READ "include/ndtf/ndtf.h" NDTF_INCLUDE_FILE)
+string(REGEX MATCH "#define[ ]+NDTF_VERSION_MAJOR[ ]+([0-9]+)" _ ${NDTF_INCLUDE_FILE})
+set(NDTF_VERSION_MAJOR "${CMAKE_MATCH_1}")
+string(REGEX MATCH "#define[ ]+NDTF_VERSION_MINOR[ ]+([0-9]+)" _ ${NDTF_INCLUDE_FILE})
+set(NDTF_VERSION_MINOR "${CMAKE_MATCH_1}")
+
+set(NDTF_VERSION ${NDTF_VERSION_MAJOR}.${NDTF_VERSION_MINOR})
+
+project(ndtf VERSION ${NDTF_VERSION} LANGUAGES C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_subdirectory(thirdparty/zlib)
+add_subdirectory("thirdparty/zlib")
 
 file(GLOB SRC_FILES "src/*.c")
 
