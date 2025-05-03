@@ -2,6 +2,8 @@
 #include <string.h>
 #include <zlib.h>
 
+#define _CRT_SECURE_NO_DEPRECATE
+
 #ifndef max
 	#define max(a,b) (((a) > (b)) ? (a) : (b))
 #endif
@@ -176,7 +178,7 @@ NDTF_File ndtf_file_loadFromFile(FILE* file, NDTF_TexelFormat* format, NDTF_Texe
 		if (fseek(file, 0, SEEK_END) != 0)
 			return result;
 
-		int64_t size = _ftelli64(file);
+		int64_t size = ftell(file);
 		if (size < 0)
 			return result;
 
@@ -209,8 +211,7 @@ NDTF_File ndtf_file_load(const char* filename, NDTF_TexelFormat* format, NDTF_Te
 {
 	NDTF_File result;
 
-	FILE* file = NULL;
-	fopen_s(&file, filename, "rb");
+	FILE* file = fopen(filename, "rb");
 
 	if (file != NULL)
 	{
