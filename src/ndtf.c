@@ -2,6 +2,13 @@
 #include <string.h>
 #include <zlib.h>
 
+#ifndef max
+	#define max(a,b) (((a) > (b)) ? (a) : (b))
+#endif
+#ifndef min
+	#define min(a,b) (((a) < (b)) ? (a) : (b))
+#endif
+
 NDTF_Channels ndtf_getChannelCount(NDTF_TexelFormat texelFormat)
 {
 	switch (texelFormat)
