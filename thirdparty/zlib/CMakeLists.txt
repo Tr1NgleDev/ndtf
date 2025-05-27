@@ -53,7 +53,3 @@ if(WIN32)
             _CRT_NONSTDC_NO_DEPRECATE
     )
 endif()
-
-install(FILES zlib.h zconf.h
-    DESTINATION include
-)
