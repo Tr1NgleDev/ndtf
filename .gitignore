@@ -369,5 +369,6 @@ FodyWeavers.xsd
 cmake-build-*
 
 build
+build-linux
 
 ndtf.hpp
