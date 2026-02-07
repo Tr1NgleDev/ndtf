@@ -13,7 +13,7 @@ project(ndtf VERSION ${NDTF_VERSION} LANGUAGES C)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
-add_subdirectory("thirdparty/zlib")
+add_subdirectory("thirdparty/libdeflate")
 
 file(GLOB SRC_FILES "src/*.c")
 
@@ -24,6 +24,6 @@ target_include_directories(ndtf
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-target_link_libraries(ndtf PRIVATE zlib)
+target_link_libraries(ndtf libdeflate::libdeflate_static)
 
 target_compile_options(ndtf PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-Wno-error=implicit-function-declaration>)

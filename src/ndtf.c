@@ -1,6 +1,6 @@
 #include <ndtf/ndtf.h>
 #include <string.h>
-#include <zlib.h>
+#include <libdeflate.h>
 
 #define _CRT_SECURE_NO_DEPRECATE
 
@@ -963,14 +963,21 @@ void ndtf_file_setZLibCompression(NDTF_File* file, bool zlib_compression)
 
 void* ndtf_zLibCompressData(const void* data, size_t size, size_t* newSize)
 {
-	uint64_t compSize = compressBound(size);
+	struct libdeflate_compressor* compressor = libdeflate_alloc_compressor(9);
+
+	uint64_t compSize = libdeflate_zlib_compress_bound(compressor, size);
 
 	uint8_t* compData = (uint8_t*)malloc(compSize + sizeof(uint64_t));
-	if (!compData) return NULL;
-
-	int result = compress(compData + sizeof(uint64_t), &compSize, data, size);
-	if (result != Z_OK)
+	if (!compData)
 	{
+		libdeflate_free_compressor(compressor);
+		return NULL;
+	}
+
+	size_t result = libdeflate_zlib_compress(compressor, data, size, compData + sizeof(uint64_t), compSize);
+	if (!result)
+	{
+		libdeflate_free_compressor(compressor);
 		free(compData);
 		return NULL;
 	}
@@ -978,14 +985,20 @@ void* ndtf_zLibCompressData(const void* data, size_t size, size_t* newSize)
 	memcpy((void*)compData, (void*)&size, sizeof(uint64_t)); // store the uncompressed size
 
 	if (newSize)
-		*newSize = compSize + sizeof(uint64_t);
+	{
+		*newSize = result + sizeof(uint64_t);
+	}
 
+	libdeflate_free_compressor(compressor);
 	return compData;
 }
 
 void* ndtf_zLibDecompressData(const void* data, size_t size, size_t* newSize)
 {
-	if (size < sizeof(uint64_t)) return NULL;
+	if (size < sizeof(uint64_t))
+	{
+		return NULL;
+	}
 
 	uint64_t uncompSize = *(uint64_t*)data;
 
@@ -995,16 +1008,23 @@ void* ndtf_zLibDecompressData(const void* data, size_t size, size_t* newSize)
 	const void* compData = (uint8_t*)data + sizeof(uint64_t);
 	uint64_t compSize = size - sizeof(uint64_t);
 
-	int result = uncompress(uncompData, &uncompSize, compData, compSize);
-	if (result != Z_OK)
+	struct libdeflate_decompressor* decompressor = libdeflate_alloc_decompressor();
+
+	size_t actualSize = uncompSize;
+	enum libdeflate_result result = libdeflate_zlib_decompress(decompressor, compData, compSize, uncompData, uncompSize, &actualSize);
+	if (result != LIBDEFLATE_SUCCESS)
 	{
+		libdeflate_free_decompressor(decompressor);
 		free(uncompData);
 		return NULL;
 	}
 
 	if (newSize)
-		*newSize = uncompSize;
+	{
+		*newSize = actualSize;
+	}
 
+	libdeflate_free_decompressor(decompressor);
 	return uncompData;
 }
 
