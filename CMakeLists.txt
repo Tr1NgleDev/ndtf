@@ -13,8 +13,8 @@ project(ndtf VERSION ${NDTF_VERSION} LANGUAGES C)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
-set(LIBDEFLATE_BUILD_GZIP OFF)
-set(LIBDEFLATE_BUILD_SHARED_LIB OFF)
+set(LIBDEFLATE_BUILD_GZIP OFF CACHE BOOL "Build the libdeflate-gzip program" FORCE)
+set(LIBDEFLATE_BUILD_SHARED_LIB OFF CACHE BOOL "Build the shared library" FORCE)
 add_subdirectory("thirdparty/libdeflate")
 
 file(GLOB SRC_FILES "src/*.c")
