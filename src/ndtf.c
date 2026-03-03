@@ -732,7 +732,7 @@ size_t ndtf_file_getTexelIndex(NDTF_File* file, NDTF_Coord* coordPtr)
 		ind += coordPtr->coord[i] * max(sp, 1);
 	}
 
-	ind *= (size_t)channels;
+	ind *= ndtf_getTexelSize((NDTF_TexelFormat)file->header.texelFormat);
 
 	return ind;
 }
